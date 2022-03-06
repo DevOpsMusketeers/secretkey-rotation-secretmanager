@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  This is for SAM Code template to update Access Keys of any user secret in Secret Manager
+
+Globals:
+  Function:
+    Timeout: 600
+
+
+Resources:
+  LambdaDemoFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+      CodeUri: lambda.zip
+      Handler: access_keys_rotation.lambda_handler
+      Runtime: python3.9
+      Policies:
+      - Statement:
+        - Sid: IAMPolicy
+          Effect: Allow
+          Action:
+          - iam:ListUsers
+          - iam:GetAccessKeyLastUsed
+          - iam:ListAccessKeys
+          - iam:DeleteAccessKey
+          - iam:UpdateAccessKey
+          - iam:CreateAccessKey
+          Resource: '*'
+      - SecretsManagerReadWrite
+
+  LambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LambdaDemoFunction
+      Principal: secretsmanager.amazonaws.com
+
+Outputs:
+  LambdaArn:
+   Value: !Ref LambdaDemoFunction
